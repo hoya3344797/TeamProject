@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shop.dao.AdminShopDao">
+<sql id="defaultSelect">
+	SELECT itemno,userno,itemname,createdate+ INTERVAL '9' HOUR AS createdate,price,itemcomm,remain,titleImg
+	FROM ITEM
+</sql>
+<sql id="search">
+	<if test="search != null">
+		AND itemName Like '%${search}%'
+	</if>
+</sql>
+
+
+<select id="selectCnt" parameterType="util.ShopPaging" resultType="int">
+	SELECT count(*) FROM (
+	<include refid="defaultSelect" />
+	<if test="search != null">
+		<where>
+			<include refid="search"/>
+		</where>
+	</if>
+	)
+</select>
+
+<select id="selectItems" parameterType="util.ShopPaging" resultType="dto.Item">
+	SELECT * FROM (
+		SELECT rownum rnum, B.* FROM (
+			<include refid="defaultSelect" />
+			<if test="search != null">
+				<where>
+					<include refid="search"/>
+				</where>
+			</if>
+			ORDER BY ItemNo DESC
+			) B
+		)
+	<where>
+		AND rnum BETWEEN #{startNo} AND #{endNo}
+	</where>
+		
+</select>
+
+<select id="selectTitleImgFile" parameterType="dto.Item" resultType="dto.ItemFile">
+	SELECT it.itemno, stored_Name storedName, origin_Name originName , fileNo  FROM item it, itemFile ItF 
+	<where>
+	AND it.itemno = itf.itemno
+	AND it.titleimg = itf.FILENO
+	AND it.itemno IN
+	<foreach collection="items" item="data" open="(" close=")" separator="," >
+		#{data.itemNo}
+	</foreach>
+	</where>
+</select>
+
+<insert id="insertItem" parameterType="dto.Item">
+	<selectKey keyProperty="itemNo" order="BEFORE" resultType="int">
+	SELECT item_seq.nextval FROM dual
+	</selectKey>
+	INSERT INTO ITEM(itemNo, userNo, itemName,itemComm,price,remain)
+	VALUES(#{itemNo},#{userNo},#{itemName},#{itemComm},#{price},#{remain})
+</insert>
+
+<insert id="fileSave" parameterType="dto.ItemFile">
+	INSERT into itemfile(fileNo,itemNo,origin_Name,stored_Name)
+    SELECT itemfile_seq.nextval, D.* FROM ( 
+        <foreach collection="itemFiles" item="file" separator="UNION ALL ">
+        <![CDATA[
+        	SELECT
+            #{file.itemNo} AS boardNo
+            ,#{file.originName} AS origin_name
+            ,#{file.storedName} AS stored_name
+        FROM DUAL]]>
+        </foreach>
+        ) D
+</insert>
+
+<insert id="inserttitleImgFile" parameterType="dto.ItemFile">
+	<selectKey keyProperty="fileNo" order="BEFORE" resultType="int">
+	SELECT itemfile_seq.nextval FROM dual
+	</selectKey>
+	INSERT into itemfile(fileNo,itemNo,origin_Name,stored_Name)
+    VALUES(#{fileNo},#{itemNo},#{originName},#{storedName})
+</insert>
+
+<update id="updatetitleImgFile" parameterType="dto.ItemFile">
+	UPDATE item
+	set titleImg = #{fileNo}
+	<where>
+		AND itemNo = #{itemNo}
+	</where> 
+</update>
+
+<select id="selectItemByItemNo" parameterType="int" resultType="dto.Item" >
+	SELECT itemno,userno, itemname,createdate,price,itemcomm,remain,titleImg
+	FROM item
+	<where>
+		AND itemno = #{itemNo}
+	</where>
+</select>
+
+<select id="selectItemFileByItemNo" parameterType="int" resultType="dto.ItemFile">
+	SELECT fileNo, itemNo, origin_name, stored_name
+	FROm itemFILE
+	<where>
+		AND itemNo = #{itemNo}
+	</where> 
+</select>
+
+<update id="updateIByItem" parameterType="dto.Item">
+	UPDATE item
+	<set> 
+		,itemName = #{itemName}
+		,itemComm = #{itemComm}
+		,price = #{price}
+		,remain = #{remain}
+	</set>
+	<where>
+		AND itemNo = #{itemNo}
+	</where> 
+</update>
+
+<delete id="deleteByItemOldFile" parameterType="dto.Item">
+	DELETE FROM ItemFile
+	WHERE itemNo = #{itemNo}
+	AND fileNo != (SELECT titleImg FROM Item WHERE itemNo = #{itemNo})
+</delete>
+
+<delete id="deleteitemByItemNo" parameterType="int">
+	DELETE ITEM
+	where itemNo = #{itemNo}
+</delete>
+
+<delete id="deleteitemFileByItemNo" parameterType="int">
+	DELETE ITEMFILE
+	where itemNo = #{itemNo}
+</delete>
+
+<update id="deleteItemFK" parameterType="int">
+	UPDATE item
+	<set>
+				titleImg = null
+	</set>
+	<where>
+		AND itemno = #{itemNo}
+	</where>
+</update>
+
+</mapper>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="login.dao.SocialDao">
+	<select id="getSosid" resultType="String" parameterType="String">
+		select suser_no from usertb
+		<where>
+			and suser_no = #{id }
+		</where>
+	</select>
+
+	<select id="socialLogin" resultType="User" parameterType="String">
+		select 	userno, name, userid, nickname, gender, email, postcode, address,
+			detailAddress, extraAddress, phone, gradeno FROM usertb
+		<where>
+			and suser_no = #{suserno }
+		</where>
+	</select>
+	<insert id="socialJoin" parameterType="User">
+		INSERT INTO usertb(userno, name, userid, userpw,  email, gender, postcode, address, detailAddress, extraAddress, phone, nickname,suser_no)
+		VALUES (user_seq.nextval, #{name}, #{userid},#{userpw}, #{email}, #{gender}, #{postcode}, #{address}, #{detailAddress}, #{extraAddress}, #{phone},  #{nickname}, #{suserno})
+	</insert>
+		<insert id="insertAccessHistory" parameterType="User">
+		insert into ACCESSHISTORY (ACCESSNO, USERNO, ACCESSDATE) VALUES (ACCESSHISTORY_SEQ.nextval, #{userno}, sysdate + 9/24)
+	</insert>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="comment.dao.CommentDao">
+
+	<select id="selectCommentByBoardNo" resultType="Comment" parameterType="Board">
+        SELECT c.commno, c.boardno, c.USERNO, u.nickname, c.COMMCONTENT, c.commdate
+        FROM (SELECT COMMNO, boardno, USERNO, COMMCONTENT, commdate
+              FROM COMMENTTB
+              WHERE boardno = #{boardNo}) c
+                 INNER JOIN usertb u ON u.userno = c.USERNO
+        ORDER BY c.commdate ASC
+    </select>
+<insert id="commentInsert" parameterType="Comment">
+	<selectKey keyProperty="commNo" order="BEFORE" resultType="int">
+		SELECT commentTB_seq.nextval FROM dual
+	</selectKey>
+	INSERT INTO COMMENTTB( COMMNO, boardno, userno, commContent)
+	VALUES( #{commNo }, #{boardNo }, #{userNo }, #{commContent} )
+</insert>
+	
+<delete id="deleteComment" parameterType="Comment">
+	DELETE COMMENTTB
+	<where>
+		AND COMMNO = #{commNo}
+		AND boardno = #{boardNo}
+	</where>
+</delete>
+	<delete id="deleteCommentAll" parameterType="Comment">
+		DELETE COMMENTTB
+		<where>
+			AND boardno = #{boardNo}
+		</where>
+	</delete>
+<select id="commentByBoardNo" resultType="Comment">
+	select c.COMMNO,c.USERNO,c.COMMNO, c.BOARDNO, c.COMMCONTENT, u.NICKNAME from COMMENTTB c
+	    left outer join USERTB u on c.USERNO = u.USERNO
+	<where>
+		AND COMMNO = #{commNo}
+	</where>
+</select>
+</mapper>

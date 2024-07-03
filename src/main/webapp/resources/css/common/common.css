@@ -1,0 +1,24 @@
+@import url('https://webfontworld.github.io/NexonMaplestory/NexonMaplestory.css');
+*{
+    font-family: 'NexonMaplestory';
+    font-weight: 300;
+    font-style: normal;
+}
+a{
+    color: black;
+    text-decoration-line: none;
+}
+ul{
+    text-decoration-line: none;
+}
+li{
+    text-decoration-line: none;
+}
+hr{
+    clear: both;
+    margin-bottom: 10px;
+}
+a:hover{
+    text-decoration-line: none;
+    color: #87cefa;
+}

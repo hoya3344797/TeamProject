@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shop.dao.ShopDao">
+
+<select id="getList" resultType="dto.Item" parameterType="util.ShopPaging">
+	select * FROM (
+		select rownum rnum , i.* from(
+		SELECT itemno,userno,itemname,createdate,price,itemcomm,remain,titleImg
+		FROM ITEM a
+		<where>
+			AND  a.itemNo NOT IN (SELECT itemno FROM itemreport)
+		<if test="search != null">
+			AND itemname LIKE '%${search}%'
+		</if>
+		</where>
+		ORDER BY itemno DESC
+		) i
+	)
+	<where>
+		AND rnum between #{startNo} AND #{endNo}
+	</where>
+</select>
+
+<select id="selectCntAll" resultType="int" parameterType="util.ShopPaging">
+	SELECT count(*) FROM (
+		SELECT itemno,userno,itemname,createdate,price,itemcomm,remain,titleImg
+		FROM ITEM a
+		<where>
+			AND  a.itemNo NOT IN (SELECT itemno FROM itemreport)
+		<if test="search != null">
+			AND itemname LIKE '%${search}%'
+		</if>
+		</where>
+	)
+</select>
+
+<select id="getItemByItemNo" parameterType="int" resultType="dto.Item">
+	SELECT itemno,userno,itemname,createdate,price,itemcomm,remain,titleImg
+	FROM ITEM
+	<where>
+		AND itemno = #{itemNo}
+	</where>
+</select>
+<select id="countMyOrderByItemNo" parameterType="map" resultType="int">
+	select count(*) from (
+    select oi.itemno, oi.orderno,uo.userno from ORDERITEM oi join USERORDER uo on oi.ORDERNO = uo.ORDERNO
+	<where>
+        and oi.itemno = #{itemNo}
+        and uo.USERNO = #{userno}
+	</where>
+	)
+</select>
+</mapper>

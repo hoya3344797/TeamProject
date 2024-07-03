@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="report.dao.ReportDao">
+	<select id="reportType" resultType="BoardReportType">
+		select REPORTTYPENO, REPORTTYPE from BOARDREPORTTYPE order by REPORTTYPENO
+	</select>
+	<select id="reportboardlist" resultType="BoardReport">
+		select BOARDNO from BOARDREPORT
+	</select>
+	<select id="reportcommlist" resultType="CommReport">
+		select COMMNO from COMMREPORT
+	</select>
+	<select id="reportitemlist" resultType="ItemReport">
+		select ITEMNO from ITEMREPORT
+	</select>
+	<insert id="reportBoard" parameterType="BoardReport">
+		insert into BOARDREPORT(boardreportno, boardno, userno, reporttypeno, reportcontent, reportdate)
+		values (BOARDREPORT_SEQ.nextval,#{boardNo},#{userNo},#{reportTypeNo},#{reportContent},sysdate + 9/24)
+	</insert>
+
+	<select id="commReportType" resultType="CommReportType">
+		select COMMREPORTTYPENO, COMMREPORT from COMMREPORTTYPE order by COMMREPORTTYPENO
+	</select>
+
+	<insert id="reportComm" parameterType="CommReport">
+		insert into COMMREPORT(COMMREPORTNO, COMMNO, userno, COMMREPORTTYPENO, CONTENT, COMMREPORTDATE)
+		values (COMMREPORT_SEQ.nextval,#{commNo},#{userNo},#{commReportTypeNo},#{content},sysdate + 9/24)
+	</insert>
+	<select id="boardlist" resultType="BoardReport">
+		SELECT r.BOARDREPORTNO,r.BOARDNO, r.REPORTTYPENO, r.REPORTCONTENT, r.REPORTDATE, br.REPORTTYPE, b.CONTENT,u.NICKNAME
+		FROM BOARDREPORT r
+				 LEFT OUTER JOIN BOARDREPORTTYPE br ON r.REPORTTYPENO = br.REPORTTYPENO
+				 LEFT OUTER JOIN BOARD b ON r.BOARDNO = b.BOARDNO
+		join USERTB u on r.USERNO = u.userno
+	</select>
+	<select id="commlist" resultType="CommReport">
+		SELECT r.COMMREPORTNO,r.COMMNO, r.COMMREPORTNO, r.CONTENT, r.COMMREPORTDATE, br.COMMREPORT, b.COMMCONTENT, b.USERNO, u.nickname
+		FROM COMMREPORT r
+				 LEFT OUTER JOIN COMMREPORTTYPE br ON r.COMMREPORTTYPENO = br.COMMREPORTTYPENO
+				 LEFT OUTER JOIN COMMENTTB b ON r.COMMNO = b.COMMNO
+				 left outer join USERTB u on b.USERNO = u.USERNO
+	</select>
+	<delete id="deleteReport" parameterType="int">
+		delete BOARDREPORT where BOARDREPORTNO = #{boardReportNo}
+	</delete>
+	<delete id="deleteCommReport" parameterType="int">
+		delete COMMREPORT where COMMREPORTNO = #{commReportNo}
+	</delete>
+	<select id="getItemReportType" resultType="report.dto.ItemReportType">
+		SELECT ITEMREPORTNO, ITEMREPORT FROM ItemReportType
+	</select>
+	<select id="getItemByItemNo" parameterType="int" resultType="dto.Item">
+	  SELECT i.itemno as itemNo, i.itemName , i.price, i.itemComm,
+	    i.remain,
+	    i.titleImg,
+	    it.fileno,
+	    it.stored_Name,
+	    it.origin_Name
+	FROM 
+	    item i 
+	LEFT JOIN 
+	    itemfile it 
+	ON 
+	    i.itemno = it.itemno
+	WHERE 
+	    i.itemno = #{itemNo}
+	</select>
+	<insert id="insertItemReport" parameterType="report.dto.ItemReport">
+		<selectKey order="BEFORE" resultType="int" keyProperty="reportNo">
+			SELECT itemreport_seq.nextval FROM dual
+		</selectKey>
+		INSERT INTO ITEMREPORT(reportno, itemno, userno, itemReportNo, reportContent)
+		VALUES(#{reportNo}, #{itemNo}, #{userNo}, #{itemReportNo}, #{reportContent})
+	</insert>
+	<select id="itemlist" resultType="report.dto.ItemReport">
+		SELECT ir.reportno, ir.itemno, ir.userno, ir.reportDate
+		, irt.itemReportNo, ir.reportContent,
+		irt.ITEMREPORT , itemname, nickname
+		FROM item i, ITEMREPORT ir, ITEMREPORTTYPE irt, usertb u
+		WHERE i.ITEMNO = ir.ITEMNO 
+		AND irt.ITEMREPORTNO = ir.ITEMREPORTNO 
+		AND ir.USERNO  = u.USERNO 
+	</select>
+	<delete id="deleteItemReport" parameterType="int">
+		delete itemreport where reportno = #{reportno}
+	</delete>
+	<select id="userbyboardlist" resultType="BoardReport">
+		SELECT
+			r.BOARDREPORTNO,
+			r.BOARDNO,
+			r.REPORTTYPENO,
+			r.REPORTCONTENT,
+			r.REPORTDATE,
+			br.REPORTTYPE,
+			b.CONTENT,
+			r.USERNO,
+			u.NICKNAME
+		FROM
+			BOARDREPORT r
+				LEFT OUTER JOIN
+			BOARDREPORTTYPE br ON r.REPORTTYPENO = br.REPORTTYPENO
+				LEFT OUTER JOIN
+			BOARD b ON r.BOARDNO = b.BOARDNO
+				JOIN
+			USERTB u ON r.USERNO = u.USERNO
+		WHERE
+			r.USERNO = #{userNo}
+	</select>
+	<select id="userbycommlist" resultType="CommReport">
+		SELECT
+			r.COMMREPORTNO,
+			r.COMMNO,
+			r.COMMREPORTNO,
+			r.CONTENT,
+			r.COMMREPORTDATE,
+			br.COMMREPORT,
+			b.COMMCONTENT,
+			b.USERNO,
+			u.NICKNAME
+		FROM
+			COMMREPORT r
+				LEFT OUTER JOIN
+			COMMREPORTTYPE br ON r.COMMREPORTTYPENO = br.COMMREPORTTYPENO
+				LEFT OUTER JOIN
+			COMMENTTB b ON r.COMMNO = b.COMMNO
+			 JOIN
+			USERTB u ON r.USERNO = u.USERNO
+		WHERE
+			r.USERNO = #{userNo}
+	</select>
+	<select id="userbyitemlist" resultType="ItemReport">
+		SELECT
+			ir.REPORTNO,
+			ir.ITEMNO,
+			ir.USERNO,
+			ir.REPORTDATE,
+			ir.REPORTCONTENT,
+			irt.ITEMREPORT,
+			i.ITEMNAME,
+			u.NICKNAME
+		FROM
+			ITEMREPORT ir
+				LEFT OUTER JOIN
+			ITEM i ON i.ITEMNO = ir.ITEMNO
+				LEFT OUTER JOIN
+			ITEMREPORTTYPE irt ON irt.ITEMREPORTNO = ir.ITEMREPORTNO
+			 JOIN
+			USERTB u ON ir.USERNO = u.USERNO
+		WHERE
+			ir.USERNO = #{userNo}
+	</select>
+
+</mapper>

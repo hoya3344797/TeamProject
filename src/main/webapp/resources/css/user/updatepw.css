@@ -1,0 +1,130 @@
+/* 전체 컨테이너 스타일 */
+.warpper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.warp {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+}
+
+/* 제목 스타일 */
+h3 {
+    text-align: center;
+    color: #87CEFA;
+    margin-bottom: 20px;
+}
+
+/* 이메일 박스 스타일 */
+#emailbox {
+    margin-bottom: 20px;
+}
+
+#emailbox label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #87CEFA;
+    text-align: center;
+}
+
+#emailbox input[type="email"],
+#emailbox input[type="text"] {
+    width: calc(100% - 110px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    float: left;
+}
+
+#emailbox .send__btn {
+    width: 100px;
+    padding: 10px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+}
+
+#emailbox .send__btn:hover {
+    background-color: #2980b9;
+}
+
+#alertemail {
+    clear: both;
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+/* 폼 내부 숨겨진 인풋 스타일 */
+form div[hidden="hidden"] {
+    display: none;
+}
+
+/* 사용자 정보 스타일 */
+#userinfo {
+    margin-top: 40px;
+}
+
+#userinfo label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #87CEFA;
+    text-align: center;
+}
+
+#userinfo input[type="text"],
+#userinfo input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+#alertid,
+#alertpw,
+#alertpw2 {
+    color: red;
+    font-size: 0.9em;
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+/* 버튼 스타일 */
+.search__btn {
+    width: calc(50% - 10px);
+    padding: 10px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px 0;
+}
+
+.search__btn:hover {
+    background-color: #2980b9;
+}
+
+button[type="reset"] {
+    margin-left: 15px;
+    background-color: #e74c3c;
+}
+
+button[type="reset"]:hover {
+    background-color: #c0392b;
+}

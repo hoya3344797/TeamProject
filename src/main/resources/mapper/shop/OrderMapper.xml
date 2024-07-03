@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shop.dao.OrderDao">
+
+<insert id="insertUserorder" parameterType="dto.UserOrder">
+	<selectKey order="BEFORE" resultType="int" keyProperty="orderNo">
+		SELECT USERORDER_SEQ.nextval FROM dual
+	</selectKey>
+	INSERT INTO UserOrder(orderno,userno,username,phone,pay,totalprice,post_code,address,detailaddress,extraaddress,paramount,orderDate)
+	VALUES(#{orderNo},#{userNo},#{userName},#{phone},'N',#{totalPrice},#{postCode},#{address},#{detailAddress},#{extraAddress},#{paraMount},SYSDATE)
+</insert>
+
+<!-- <insert id="insertOrderItem" parameterType="dto.OrderItem"> -->
+<!-- 	<selectKey order="BEFORE" resultType="int" keyProperty="orderItemNo"> -->
+<!-- 		SELECT ORDERITEM_SEQ.nextval FROM dual -->
+<!-- 	</selectKey> -->
+<!-- 	INSERT INTO OrderItem(orderitemno,orderno,itemno,itemname,order_quantity,price) -->
+<!-- 	VALUES(#{orderItemNo},#{orderNo},#{itemNo},#{itemName},#{orderQuantity},#{price}) -->
+<!-- </insert> -->
+
+<select id="basketListBybasketNos" parameterType="int" resultType="dto.Basket">
+	SELECT basketno,userno,itemno,quantity,additionalDATE+ INTERVAL '9' HOUR AS additionalDATE FROM BASKET
+	<where>
+	basketNo in 
+	<foreach collection="basketNos" item="data" open="(" close=")" separator="," >
+		#{data.basketNo}
+	</foreach>
+	</where>
+</select>
+
+<select id="getItemByItemNos" parameterType="dto.Basket" resultType="dto.Item">
+	SELECT itemno,userno,itemname,createdate+ INTERVAL '9' HOUR AS createdate,price,itemcomm,remain,titleImg FROM item
+		<where>
+		itemno in 
+		<foreach collection="baskets" item="data" open="(" close=")" separator="," >
+			#{data.itemNo}
+		</foreach>
+		</where>
+</select>
+
+<select id="getTitleImgs" resultType="dto.ItemFile">
+	SELECT it.itemno, stored_Name storedName, origin_Name originName , fileNo  FROM item it, itemFile ItF 
+	<where>
+	AND it.itemno = itf.itemno
+	AND it.titleimg = itf.FILENO
+	AND it.itemno IN
+	<foreach collection="items" item="data" open="(" close=")" separator="," >
+		#{data.itemNo}
+	</foreach>
+	</where>
+</select>
+
+<insert id="insertUserOrder" parameterType="dto.UserOrder">
+	<selectKey order="BEFORE" resultType="int" keyProperty="orderNo">
+		SELECT USERORDER_SEQ.nextval FROM dual
+	</selectKey>
+	INSERT INTO UserOrder(orderno,userno,username,phone,pay,totalprice,post_code,address,detailaddress,extraaddress,paramount,orderDate,impuid,merchantUid)
+	VALUES(#{orderNo},#{userNo},#{userName},#{phone},#{pay},#{totalPrice},#{postCode},#{address},#{detailAddress},#{extraAddress},#{paraMount},SYSDATE,#{impUid},#{merchantUid})
+</insert>
+
+<insert id="insertOrderItems" parameterType="int">
+	INSERT INTO OrderItem(orderitemno, orderno, itemno, itemname, order_quantity, price)
+	SELECT ORDERITEM_SEQ.nextval, D.* FROM (
+	<foreach collection="orderItems" item="items" separator="UNION ALL">
+	<![CDATA[
+		SELECT 
+		#{items.orderNo} AS orderNo 
+		, #{items.itemNo} AS itemNo 
+		, (SELECT itemName FROM Item WHERE itemNo = #{items.itemNo}) AS itemName 
+		, #{items.orderQuantity} AS orderQuantity 
+		,(SELECT price FROM Item WHERE itemNo = #{items.itemNo}) AS price
+		FROM DUAL]]> 
+	</foreach>
+	)D 
+</insert>
+
+<select id="getBasketsByBasketNos" parameterType="int" resultType="dto.Basket">
+	SELECT basketno,userno,itemno,quantity,additionalDATE+ INTERVAL '9' HOUR AS additionalDATE FROM BASKET
+		<where>
+		basketNo in 
+		<foreach collection="basketNos" item="data" open="(" close=")" separator="," >
+			#{data}
+		</foreach>
+		</where>
+</select>
+
+<delete id="deleteBasketsByBasketNos">
+<if test="basketNos != null">
+DELETE FROM basket
+WHERE basketNo IN 
+	<foreach collection="basketNos" item="data" open="(" close=")" separator=",">
+		#{data}
+	</foreach>
+</if>
+</delete>
+
+<select id="gettitleImg" parameterType="dto.OrderItem" resultType="dto.ItemFile">
+	SELECT it.itemno, stored_Name storedName, origin_Name originName , fileNo  FROM item it, itemFile ItF 
+	<where>
+	AND it.itemno = itf.itemno
+	AND it.titleimg = itf.FILENO
+	AND it.itemno IN
+	<foreach collection="orderItems" item="data" open="(" close=")" separator="," >
+		#{data.itemNo}
+	</foreach>
+	</where>
+</select>
+
+<select id="getItemByItemNo" parameterType="int" resultType="dto.Item">
+	SELECT itemno,userno,itemname,createdate+ INTERVAL '9' HOUR AS createdate,price,itemcomm,remain,titleImg FROM item
+	<where>
+		itemno = #{itemNo}
+	</where>
+</select>
+
+<select id="getitemTitleImg" parameterType="int" resultType="dto.ItemFile">
+	SELECT it.itemno, stored_Name storedName, origin_Name originName , fileNo  FROM item it, itemFile ItF 
+	<where>
+	AND it.itemno = itf.itemno
+	AND it.titleimg = itf.FILENO
+	AND it.itemno IN ( #{itemNo} )
+	</where>
+</select>
+
+<insert id="insertOrderItemByItemNoByquantity" parameterType="dto.OrderItem">
+	<selectKey keyProperty="orderItemNo" order="BEFORE" resultType="int">
+		SELECT orderitem_seq.nextval FROM dual
+	</selectKey>
+	INSERT INTO orderITEM(orderitemno,orderno,itemno, order_quantity,price, itemname)
+	SELECT orderItemNo,orderNo,B.itemNo,orderQuantity, price ,B.itemname
+	FROM (
+		SELECT  
+		#{orderItemNo} as orderItemNo
+		,#{orderNo} as orderNo
+		,#{orderQuantity} as orderQuantity
+		FROM DUAL )O, (
+		SELECT itemno,itemname,price
+		FROM item WHERE itemno= #{itemNo} ) B
+</insert>
+
+<select id="selectByOrderItem" parameterType="dto.OrderItem" resultType="dto.OrderItem">
+	SELECT * FROM orderitem
+	<where>
+		AND orderitemNo = #{orderItemNo}
+	</where>
+</select>
+
+<select id="selectUserOrderByUser" parameterType="map" resultType="dto.UserOrder">
+	SELECT * FROM (
+	SELECT rownum rnum, B.* FROM
+	(SELECT orderno,userno,username,phone,pay,totalprice,post_code,address,detailaddress,extraaddress,paramount,orderDate,impUid,merchantUid FROM userOrder
+	<where>
+		AND userno = #{user.userno}
+		<if test="shopPaging.search != null">
+		AND orderno IN 
+			( SELECT orderno FROM orderITEM
+			WHERE itemname LIKE '%${shopPaging.search}%'
+			)
+		</if>
+	</where>
+	ORDER BY orderno DESC
+	) B
+	)
+	    <where>
+        AND rnum BETWEEN #{shopPaging.startNo } AND #{shopPaging.endNo}
+    </where>
+</select>
+
+<select id="selectOrderItemsByUserOrders" parameterType="dto.UserOrder" resultType="dto.OrderItem">
+	SELECT * FROM orderitem
+	<where> AND 1=1
+	<if test="orders != null">
+	AND orderno IN 
+		<foreach collection="orders" item="data" open="(" close=")" separator=",">
+		#{data.orderNo}
+		</foreach>
+	</if>
+	</where>
+	ORDER BY orderno DESC
+</select>
+
+<select id="selectItemByUserOrderItems" parameterType="dto.OrderItem" resultType="dto.Item">
+   SELECT 
+        i.itemno as itemNo,
+        i.itemName,
+        i.price,
+        i.itemComm,
+        i.remain,
+        i.titleImg,
+        it.fileno,
+        it.stored_Name,
+        it.origin_Name
+    FROM 
+        item i 
+    LEFT JOIN 
+        itemfile it 
+    ON 
+        i.itemno = it.itemno
+    WHERE 
+        i.itemno IN 
+        <foreach item="orderItem" index="index" collection="orderitems" open="(" separator="," close=")">
+            #{orderItem.itemNo}
+        </foreach>
+</select>
+
+<select id="selectCntByUserNo" resultType="int" parameterType="map">
+	SELECT count(*) FROM (
+		SELECT u.orderno
+		FROM userorder u, orderitem o
+		<where>
+			AND o.orderno = u.orderno 
+		<if test="userno > 0">
+			AND userno = #{userno}
+		</if>
+		<if test="shopPaging.search != null">
+			AND itemname LIKE '%${shopPaging.search}%'
+		</if>
+		</where>
+		GROUP BY u.orderno
+	)
+</select>
+
+<select id="selectUserOrderAll" parameterType="util.ShopPaging" resultType="dto.UserOrder">
+	SELECT * FROM (
+	SELECT rownum rnum, B.* FROM
+	(SELECT u.orderno,userno,username,phone,pay,totalprice,post_code,address,detailaddress,extraaddress,paramount,orderDate,impUid,merchantUid  FROM userorder u, ORDERITEM o 
+	<where>
+	AND u.ORDERNO =o.ORDERNO 
+	<if test="search != null">
+	AND o.ITEMNAME LIKE '%${search}%'
+	</if>
+	</where>
+	ORDER BY orderno DESC
+	) B
+	)
+	    <where>
+        AND rnum BETWEEN #{startNo} AND #{endNo}
+    </where>
+</select>
+
+<select id="selectUserOrderByOrderNo" parameterType="int" resultType="dto.UserOrder">
+	SELECT * FROM USERORDER
+	<where>
+		AND orderNo = #{orderNo}
+	</where>
+</select>
+
+<update id="updateUserOrderorderCancle" parameterType="dto.UserOrder">
+	update userorder
+	<set>
+		pay = 'C'
+	</set>
+	<where>
+		orderno = #{orderNo}
+	</where>
+</update>
+
+<select id="selectBasketByBaskets" parameterType="dto.Basket" resultType="dto.Basket">
+	SELECT basketNo, userNo,itemNo FROM 
+	Basket
+	<where>
+	AND basketNo IN
+		<foreach collection="baskets" item="data" open="(" close=")" separator=",">
+			#{data.basketNo}
+		</foreach>
+	</where>
+</select>
+
+<select id="getItemsBySTitemNo" resultType="dto.Item" parameterType="String">
+	SELECT itemno,userno,itemname,createdate+ INTERVAL '9' HOUR AS createdate,price,itemcomm,remain,titleImg FROM item
+	<where>
+		itemNo in
+			<foreach collection="itemNos" item="data" open="(" close=")" separator=",">
+				#{data}
+			</foreach>
+	</where>
+</select>
+
+<select id="selectItemByOrderItems" parameterType="dto.OrderItem" resultType="dto.Item">
+	SELECT itemno,userno,itemname,createdate+ INTERVAL '9' HOUR AS createdate,price,itemcomm,remain,titleImg FROM item
+	<where>
+		AND itemNo IN
+		<foreach collection="orderItems" item="data" open="(" close=")" separator=",">
+			#{data.itemNo}
+		</foreach>
+	</where>
+</select>
+
+<select id="getBasketsByUserNo" parameterType="int" resultType="dto.Basket">
+	select * FROM basket
+	<where>
+		userNo = #{userNo}
+	</where>
+</select>
+
+<delete id="deleteOverlappingBaskets" parameterType="dto.Basket">
+	delete basket
+	<where>
+		basketNo In
+		<foreach collection="baskets" item="data" open="(" close=")" separator=",">
+			#{data.basketNo}
+		</foreach>
+	</where>
+</delete>
+
+<select id="getItemsByOrderItems" parameterType="dto.OrderItem" resultType="dto.Item">
+	SELECT itemno,userno,itemname,createdate+ INTERVAL '9' HOUR AS createdate,price,itemcomm,remain,titleImg FROM item
+	<where>
+		itemNo In
+		<foreach collection="orderItems" item="data" open="(" close=")" separator=",">
+			#{data.itemNo}
+		</foreach>
+	</where>
+</select>
+
+<select id="getItemFilesByItemNos" parameterType="dto.Item" resultType="dto.ItemFile">
+	SELECT fileno, itemno, stored_Name storedName, origin_Name originName from itemfile
+	<where>
+		AND fileNo IN
+		<foreach collection="items" item="data" open="(" close=")" separator=",">
+			#{data.titleImg}
+		</foreach>
+	</where>
+</select>
+
+<insert id="insertOrderItemByListOrderItem" parameterType="dto.OrderItem">
+	INSERT INTO orderITEM(orderitemno,orderno,itemno, itemname, order_quantity,price)
+	SELECT ORDERITEM_SEQ.nextval,orderNo,B.itemNo,B.itemName,order_Quantity, price
+	FROM (
+    <foreach collection="orderItems" item="data" separator="UNION ALL ">
+   <![CDATA[
+           SELECT
+            #{data.orderNo} AS orderNo
+            ,#{data.itemNo} AS itemNo
+            ,#{data.itemName} AS itemName
+            ,#{data.orderQuantity} AS order_Quantity
+            ,#{data.price} AS price
+    FROM DUAL]]>
+    </foreach>
+    )B
+</insert>
+
+<select id="getOrderItemsByUserOrder" parameterType="dto.UserOrder" resultType="dto.OrderItem">
+	SELECT * FROM orderitem
+	<where>
+		AND orderno = #{orderNo}
+	</where>
+</select>
+
+<update id="itemReaminReduction" parameterType="dto.OrderItem">
+	UPDATE Item
+	SET remain = remain - #{orderQuantity}
+	WHERE itemNo = #{itemNo}
+</update>
+
+</mapper>
